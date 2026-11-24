@@ -1,31 +1,48 @@
-# MQTT integration test plan
+# MQTT integration validation plan
 
-## Current implementation boundary
+## Current implementation
 
-The MQTT client is an experimental MQTT 3.1.1 QoS 0 transport using SmartThings Edge `cosock.socket`. It is not enabled by default and must not be installed on the production Hub v2 yet.
+Version `0.1.0-dev.8` connects the following paths:
+
+- Z-Wave plug initialization requests one LAN virtual device named `MQTT Gateway`.
+- MQTT broker preferences are read only from that Gateway device.
+- One cosock worker maintains one MQTT 3.1.1 connection for all supported plugs.
+- The worker subscribes to `<topic-prefix>/+/set`, publishes Home Assistant MQTT Discovery, and publishes retained state every five seconds.
+- Incoming `ON` / `OFF` payloads are routed through `driver:inject_capability_command` to the original SmartThings switch handler.
+- Reconnect attempts use exponential backoff; TCP packet fragments are buffered before decoding.
+
+## Before installing on the live Hub v2
+
+1. Run the GitHub Actions Lua syntax and codec tests.
+2. Run the SmartThings CLI package validation/build against the current Edge Lua libraries.
+3. Confirm the package contains both profiles and the Z-Wave fingerprints.
+4. Install on a spare/test Hub if available. If only the live Hub is available, do not switch the live plugs to this driver until the Gateway creation test is complete and a rollback path is prepared.
+5. Confirm the Gateway appears once and its Preferences can be saved.
 
 ## Broker prerequisites
 
-1. Run Mosquitto on the Docker VM.
-2. Bind the listener to the server LAN interface only.
-3. Configure a dedicated username/password.
-4. Restrict TCP/1883 to the SmartThings Hub and HA networks with the UDM firewall.
-5. Do not expose this listener to the internet.
+1. Use the existing Home Assistant Mosquitto broker.
+2. Configure a dedicated MQTT username/password.
+3. Keep the listener on the trusted LAN only; do not expose TCP/1883 to the internet.
+4. Permit the SmartThings Hub v2 to reach the broker on the configured TCP port through the UDM firewall.
 
-## Test sequence
+## Hub validation sequence
 
-1. Verify the hub can open a TCP connection to the broker.
-2. Verify MQTT CONNECT / CONNACK.
-3. Verify retained QoS 0 PUBLISH.
-4. Verify SUBSCRIBE and inbound PUBLISH parsing.
-5. Verify HA MQTT Discovery payloads.
-6. Verify switch command routing to the existing Z-Wave capability handler.
-7. Verify power/energy state publishing.
-8. Verify broker restart, hub restart, and network interruption recovery.
+1. Enter broker address, port, username, and password in MQTT Gateway Settings.
+2. Verify the Gateway reports no Lua errors and the driver connects to Mosquitto.
+3. Confirm the broker receives the Discovery config topics.
+4. Confirm each plug appears in Home Assistant without manually creating MQTT entities.
+5. Toggle each plug in SmartThings and confirm HA state follows.
+6. Toggle each plug in HA and confirm SmartThings and the physical Z-Wave plug follow.
+7. Confirm power and energy sensors show plausible values and units.
+8. Restart Mosquitto and verify automatic reconnection.
+9. Restart the Hub v2 and verify Gateway settings and MQTT reconnection.
+10. Change the Gateway broker address or credentials and verify the connection is rebuilt.
+11. Confirm SmartThings switch control still works while Mosquitto is stopped.
 
-## Important limitations
+## Current limitations
 
-- This transport currently implements MQTT 3.1.1 QoS 0 only.
-- The reconnect supervisor and device-event integration are not enabled.
-- Inbound PUBLISH parsing currently assumes complete packets are available in one non-blocking read; TCP may split packets, so a buffered stream parser is required before real deployment.
-- The current code is a development scaffold, not a release candidate.
+- MQTT 3.1.1 QoS 0 only; no QoS 1/2.
+- Plain TCP only; TLS is not implemented. Keep the broker on the trusted LAN.
+- State is polled from SmartThings' latest capability cache every five seconds.
+- Hub v2 runtime and SmartThings CLI validation have not yet been completed.
