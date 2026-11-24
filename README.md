@@ -1,58 +1,50 @@
 # Z-Wave Metering Switch MQTT
 
-A SmartThings Edge driver extension intended to bridge existing Z-Wave metering plugs to a local MQTT broker, then to Home Assistant, without using the SmartThings cloud API.
+A SmartThings Edge driver extension that bridges supported existing Z-Wave metering plugs to a local MQTT broker and Home Assistant, without the SmartThings cloud API.
 
 ## Target hardware
 
 - SmartThings Hub v2
-- Dawon/U+ Z-Wave metering plug fingerprints:
-  - Manufacturer ID: `0x018C`
-  - Product Type: `0x0042`
-- Confirmed user device: `0x018C / 0x0042 / 0x0002` (UPlus SPES-01 10A)
+- Dawon/U+ Z-Wave metering plug family
+- Confirmed user device: UPlus SPES-01 10A, fingerprint `0x018C / 0x0042 / 0x0002`
 
-## Shared MQTT Gateway design
+## Shared MQTT Gateway
 
-The driver now requests creation of one LAN virtual device named **MQTT Gateway** when a Z-Wave plug is initialized. Broker configuration belongs only to this device; Z-Wave plug devices do not expose duplicate broker preferences.
+The driver requests one LAN virtual device named **MQTT Gateway** when a supported Z-Wave plug initializes. The Gateway owns the broker Preferences. Plug devices do not duplicate these settings.
 
-Gateway Preferences:
-- MQTT Broker Address (required)
+Configure only the Gateway in SmartThings:
+- MQTT Broker Address (required; no address is embedded in source)
 - MQTT Broker Port (default `1883`)
-- MQTT Username and MQTT Password (optional)
+- MQTT Username / Password (optional)
 - MQTT Topic Prefix (default `stzwave`)
 - Home Assistant Discovery Prefix (default `homeassistant`)
 
-The Z-Wave plug devices and the LAN Gateway are intended to be managed by the same Edge driver instance. The Gateway preference lookup helper reads `gateway.preferences`; the MQTT transport has not yet been connected to this helper.
-
-## Design goals
-
-1. Preserve switch, power-meter, energy-meter, refresh, and momentary-reset behavior.
-2. Keep the SmartThings hub as the Z-Wave controller; no exclusion or re-pairing.
-3. Connect directly from Edge to the user's LAN MQTT broker.
-4. Publish device state and accept switch commands over MQTT.
-5. Support Home Assistant MQTT Discovery.
-6. MQTT failures must never prevent normal Z-Wave operation.
-7. Keep broker address and credentials out of source code.
-
-## Development status — 0.1.0-dev.6
-
-- Added a dedicated MQTT Gateway LAN device profile with shared broker preferences.
-- Removed MQTT broker preferences from the Z-Wave plug profile.
-- Added Gateway lookup, preference parsing, and guarded LAN-device creation request from the plug lifecycle.
-- MQTT connection supervision, Gateway refresh/reconfigure handling, command routing, packet framing fixes, and Hub v2 runtime validation remain in progress.
-- **Not ready to install:** MQTT transport is not yet integrated with the Z-Wave lifecycle/capability handlers.
-
-## Upstream attribution
-
-Based on [lemonade30us/Smartthings-Edge-Driver](https://github.com/lemonade30us/Smartthings-Edge-Driver/tree/main/zwave-metering-switch-v1). Original notices are retained in the derived source files. See [LICENSE](LICENSE).
+All plugs handled by this driver share one MQTT 3.1.1 TCP connection. The connection supervisor reconnects with exponential backoff, subscribes to `<topic-prefix>/+/set`, publishes retained Home Assistant Discovery configuration, and periodically publishes the latest SmartThings capability state. MQTT ON/OFF commands are injected back through the existing SmartThings switch capability handler, preserving the Z-Wave command path.
 
 ## MQTT topics
 
-- `<topic-prefix>/<device-id>/state` — retained JSON state
-- `<topic-prefix>/<device-id>/set` — `ON` / `OFF`
+For each plug (device UUID sanitized for topic use):
+- `<topic-prefix>/<device-id>/state` — retained JSON with switch, power, energy
+- `<topic-prefix>/<device-id>/set` — `ON` or `OFF`
 - `<discovery-prefix>/switch/<device-id>/config`
 - `<discovery-prefix>/sensor/<device-id>_power/config`
 - `<discovery-prefix>/sensor/<device-id>_energy/config`
 
-## Safety
+## Design and safety
 
-The upstream driver remains the production driver. Do not switch the live plug to this derivative until it passes compile, packet framing, broker, command, metering, reconnect, and hub-restart tests.
+- SmartThings Hub v2 remains the Z-Wave controller; no exclusion or re-pairing is intended.
+- The original switch, power meter, energy meter, refresh, and momentary reset behavior is retained.
+- MQTT errors are isolated in a separate cosock coroutine and do not intentionally block normal Z-Wave handlers.
+- The broker should be LAN-only, authenticated, and not exposed to the internet.
+- The implementation currently uses MQTT 3.1.1 QoS 0 on TCP/1883. TLS and QoS 1 are not implemented.
+- Discovery is retained; state is published every five seconds. HA commands are ON/OFF text payloads.
+
+## Development status — 0.1.0-dev.7
+
+End-to-end code has now been connected: Gateway provisioning and Preferences, one shared MQTT worker, reconnect backoff, TCP stream framing, HA Discovery, periodic state publication, and MQTT-to-SmartThings switch command injection.
+
+**Still requires validation before installation:** Lua/Edge package compilation, profile validation, Hub v2 Gateway creation, actual Mosquitto CONNECT/SUBSCRIBE/PUBLISH, switch command round-trip, power/energy units, and hub/broker restart behavior. This repository change is not represented as Hub-tested or production-ready.
+
+## Upstream attribution
+
+Derived from [lemonade30us/Smartthings-Edge-Driver](https://github.com/lemonade30us/Smartthings-Edge-Driver/tree/main/zwave-metering-switch-v1). Original attribution and Apache-2.0 licensing are retained; see [LICENSE](LICENSE).
