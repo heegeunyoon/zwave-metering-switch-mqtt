@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0-dev.10 - 2026-11-24
+
+- Added a separate GitHub Actions container job using the official SmartThings CLI to build the Edge package without authenticating or uploading it.
+- Added ZIP integrity and required package-file checks; the generated package is retained as a short-lived CI artifact.
+- Kept CLI, Node.js, and packaging tools out of the Docker VM and user devices.
+- Updated README and VERSION; Hub v2 runtime validation remains outstanding.
+
 ## 0.1.0-dev.9 - 2026-11-24
 
 - Replaced the outdated MQTT scaffold test plan with the complete end-to-end Hub v2 validation checklist.
