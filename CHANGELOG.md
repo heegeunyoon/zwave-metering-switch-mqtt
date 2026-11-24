@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0-dev.4 - 2026-11-24
+
+- Added SmartThings device Preferences for MQTT broker address, port, optional username/password, state topic prefix, and Home Assistant Discovery prefix.
+- Documented that SmartThings Preferences are device-scoped and must currently be set per plug.
+- Documented that broker addresses and credentials are not stored in source code.
+- MQTT transport remains experimental and is not wired into Z-Wave lifecycle/capability handlers.
+
 ## 0.1.0-dev.3 - 2026-11-24
 
 - Added an experimental MQTT 3.1.1 TCP client using SmartThings Edge `cosock.socket`.
