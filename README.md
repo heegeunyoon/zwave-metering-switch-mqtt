@@ -12,7 +12,7 @@ A SmartThings Edge driver extension intended to bridge existing Z-Wave metering 
 
 ## Shared MQTT Gateway design
 
-The driver will create one LAN virtual device named **MQTT Gateway**. Broker configuration belongs only to this device; Z-Wave plug devices do not expose duplicate broker preferences.
+The driver now requests creation of one LAN virtual device named **MQTT Gateway** when a Z-Wave plug is initialized. Broker configuration belongs only to this device; Z-Wave plug devices do not expose duplicate broker preferences.
 
 Gateway Preferences:
 - MQTT Broker Address (required)
@@ -21,7 +21,7 @@ Gateway Preferences:
 - MQTT Topic Prefix (default `stzwave`)
 - Home Assistant Discovery Prefix (default `homeassistant`)
 
-The Z-Wave plug devices and the LAN Gateway are managed by the same Edge driver instance. The driver reads the Gateway's `device.preferences` and shares one MQTT connection across all supported plugs. Preferences are not copied into plug devices, Lua source, or GitHub.
+The Z-Wave plug devices and the LAN Gateway are intended to be managed by the same Edge driver instance. The Gateway preference lookup helper reads `gateway.preferences`; the MQTT transport has not yet been connected to this helper.
 
 ## Design goals
 
@@ -33,12 +33,13 @@ The Z-Wave plug devices and the LAN Gateway are managed by the same Edge driver 
 6. MQTT failures must never prevent normal Z-Wave operation.
 7. Keep broker address and credentials out of source code.
 
-## Development status — 0.1.0-dev.5
+## Development status — 0.1.0-dev.6
 
 - Added a dedicated MQTT Gateway LAN device profile with shared broker preferences.
 - Removed MQTT broker preferences from the Z-Wave plug profile.
-- Gateway creation, preference lookup, single-connection supervision, MQTT command routing, and Hub v2 runtime validation remain in progress.
-- **Not ready to install:** MQTT transport is not yet integrated with the Z-Wave lifecycle/capability handlers. TCP stream buffering, inbound command routing, reconnect supervision, and hub restart tests remain.
+- Added Gateway lookup, preference parsing, and guarded LAN-device creation request from the plug lifecycle.
+- MQTT connection supervision, Gateway refresh/reconfigure handling, command routing, packet framing fixes, and Hub v2 runtime validation remain in progress.
+- **Not ready to install:** MQTT transport is not yet integrated with the Z-Wave lifecycle/capability handlers.
 
 ## Upstream attribution
 
