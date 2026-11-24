@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0-dev.6 - 2026-11-24
+
+- Added shared MQTT Gateway lookup and preference parsing.
+- Added guarded automatic creation request for one LAN Gateway device during Z-Wave plug initialization.
+- Excluded the LAN Gateway from the plug's Z-Wave refresh-on-added behavior.
+- MQTT transport is still not wired to the driver lifecycle or capability events; not ready for installation.
+
 ## 0.1.0-dev.5 - 2026-11-24
 
 - Added a dedicated MQTT Gateway LAN device profile to hold shared broker preferences.
