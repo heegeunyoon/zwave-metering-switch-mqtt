@@ -1,0 +1,4 @@
+name: 'Z-Wave Metering Switch MQTT'
+packageKey: 'zwave-metering-switch-mqtt'
+permissions:
+  zwave: {}
