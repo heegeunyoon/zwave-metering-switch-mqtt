@@ -36,9 +36,9 @@ jobs:
           apt-get install -y unzip
           unzip -t /tmp/zwave-metering-switch-mqtt.zip
           unzip -Z1 /tmp/zwave-metering-switch-mqtt.zip | tee /tmp/package-files.txt
-          grep -Eq '^config\\.(yml|yaml)$' /tmp/package-files.txt
-          grep -Eq '^profiles/mqtt-gateway\\.(yml|yaml)$' /tmp/package-files.txt
-          grep -Eq '^src/init\\.lua$' /tmp/package-files.txt
+          grep -Fxq 'config.yml' /tmp/package-files.txt
+          grep -Fxq 'profiles/mqtt-gateway.yml' /tmp/package-files.txt
+          grep -Fxq 'src/init.lua' /tmp/package-files.txt
       - uses: actions/upload-artifact@v4
         with:
           name: smartthings-edge-package
