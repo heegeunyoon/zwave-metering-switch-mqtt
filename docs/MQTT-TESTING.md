@@ -2,7 +2,7 @@
 
 ## Current implementation
 
-Version `0.1.0-dev.8` connects the following paths:
+Version `0.1.0-dev.9` connects the following paths:
 
 - Z-Wave plug initialization requests one LAN virtual device named `MQTT Gateway`.
 - MQTT broker preferences are read only from that Gateway device.
