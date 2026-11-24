@@ -15,7 +15,7 @@ The driver requests one LAN virtual device named **MQTT Gateway** when a support
 Configure only the Gateway in SmartThings:
 - MQTT Broker Address (required; no address is embedded in source)
 - MQTT Broker Port (default `1883`)
-- MQTT Username / Password (optional)
+- MQTT Username / Password (optional; username is required when a password is set)
 - MQTT Topic Prefix (default `stzwave`)
 - Home Assistant Discovery Prefix (default `homeassistant`)
 
@@ -39,11 +39,11 @@ For each plug (device UUID sanitized for topic use):
 - The implementation currently uses MQTT 3.1.1 QoS 0 on TCP/1883. TLS and QoS 1 are not implemented.
 - Discovery is retained; state is published every five seconds. HA commands are ON/OFF text payloads.
 
-## Development status — 0.1.0-dev.7
+## Development status — 0.1.0-dev.8
 
-End-to-end code has now been connected: Gateway provisioning and Preferences, one shared MQTT worker, reconnect backoff, TCP stream framing, HA Discovery, periodic state publication, and MQTT-to-SmartThings switch command injection.
+End-to-end code has been connected: Gateway provisioning and Preferences, one shared MQTT worker, reconnect backoff, TCP stream framing, HA Discovery, periodic state publication, and MQTT-to-SmartThings switch command injection. A GitHub Actions workflow checks Lua syntax and the MQTT codec tests.
 
-**Still requires validation before installation:** Lua/Edge package compilation, profile validation, Hub v2 Gateway creation, actual Mosquitto CONNECT/SUBSCRIBE/PUBLISH, switch command round-trip, power/energy units, and hub/broker restart behavior. This repository change is not represented as Hub-tested or production-ready.
+**Still requires validation before installation:** GitHub Actions result, SmartThings CLI package/profile validation, Hub v2 Gateway creation, actual Mosquitto CONNECT/SUBSCRIBE/PUBLISH, switch command round-trip, power/energy units, and hub/broker restart behavior. This repository change is not represented as Hub-tested or production-ready.
 
 ## Upstream attribution
 
