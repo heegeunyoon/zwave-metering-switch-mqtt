@@ -34,10 +34,12 @@ local function device_removed(driver, device)
   if Gateway.is_gateway(device) then MQTT.stop(driver) end
 end
 
-local function gateway_refresh(driver, device)
+local function refresh_handler(driver, device)
   if Gateway.is_gateway(device) then
     MQTT.stop(driver)
     MQTT.start(driver, device)
+  else
+    device:refresh()
   end
 end
 
@@ -47,17 +49,15 @@ local driver_template = {
     capabilities.refresh, capabilities.momentary
   },
   lifecycle_handlers = {
-    added = device_added,
-    init = device_init,
-    infoChanged = device_info_changed,
-    removed = device_removed
+    added = device_added, init = device_init,
+    infoChanged = device_info_changed, removed = device_removed
   },
   capability_handlers = {
     [capabilities.momentary.ID] = {
       [capabilities.momentary.commands.push.NAME] = momentary_reset_handler
     },
     [capabilities.refresh.ID] = {
-      [capabilities.refresh.commands.refresh.NAME] = gateway_refresh
+      [capabilities.refresh.commands.refresh.NAME] = refresh_handler
     }
   },
   driver_lifecycle = function(driver, event)
