@@ -1,0 +1,47 @@
+name: Driver validation
+
+on:
+  push:
+    branches: [main, feature/shared-mqtt-gateway]
+  pull_request:
+
+jobs:
+  lua-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Lua 5.3
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lua5.3
+      - name: Check Lua syntax
+        run: find src tests -name '*.lua' -print0 | xargs -0 -n1 luac5.3 -p
+      - name: Run MQTT codec tests
+        run: LUA_PATH='./src/?.lua;./src/?/init.lua;;' lua5.3 tests/test_mqtt_codec.lua
+
+  smartthings-package:
+    runs-on: ubuntu-latest
+    container:
+      image: node:24-bookworm
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install SmartThings CLI in ephemeral container
+        run: npm install --global @smartthings/cli@3.0.1
+      - name: Build Edge driver package without cloud upload
+        run: |
+          smartthings --version
+          smartthings edge:drivers:package . --build-only=/tmp/zwave-metering-switch-mqtt.zip
+          test -s /tmp/zwave-metering-switch-mqtt.zip
+          apt-get update
+          apt-get install -y unzip
+          unzip -t /tmp/zwave-metering-switch-mqtt.zip
+          unzip -Z1 /tmp/zwave-metering-switch-mqtt.zip | tee /tmp/package-files.txt
+          grep -Fxq 'config.yml' /tmp/package-files.txt
+          grep -Fxq 'profiles/mqtt-gateway.yml' /tmp/package-files.txt
+          grep -Fxq 'src/init.lua' /tmp/package-files.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: smartthings-edge-package
+          path: /tmp/zwave-metering-switch-mqtt.zip
+          if-no-files-found: error
+          retention-days: 7

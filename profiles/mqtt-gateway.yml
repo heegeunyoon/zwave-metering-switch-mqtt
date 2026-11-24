@@ -1,0 +1,61 @@
+name: mqtt-gateway
+components:
+- id: main
+  capabilities:
+  - id: refresh
+    version: 1
+preferences:
+- name: mqttBrokerHost
+  title: MQTT Broker Address
+  description: Hostname or IP address of the Home Assistant Mosquitto broker
+  required: true
+  preferenceType: string
+  definition:
+    stringType: text
+    minLength: 1
+    maxLength: 253
+- name: mqttBrokerPort
+  title: MQTT Broker Port
+  description: TCP port of the MQTT broker
+  required: true
+  preferenceType: integer
+  definition:
+    minimum: 1
+    maximum: 65535
+    default: 1883
+- name: mqttUsername
+  title: MQTT Username
+  description: Optional MQTT broker username
+  required: false
+  preferenceType: string
+  definition:
+    stringType: text
+    maxLength: 128
+- name: mqttPassword
+  title: MQTT Password
+  description: Optional MQTT broker password
+  required: false
+  preferenceType: string
+  definition:
+    stringType: password
+    maxLength: 256
+- name: mqttTopicPrefix
+  title: MQTT Topic Prefix
+  description: Prefix used for SmartThings device state and command topics
+  required: true
+  preferenceType: string
+  definition:
+    stringType: text
+    default: stzwave
+    minLength: 1
+    maxLength: 64
+- name: haDiscoveryPrefix
+  title: Home Assistant Discovery Prefix
+  description: MQTT Discovery prefix configured in Home Assistant
+  required: true
+  preferenceType: string
+  definition:
+    stringType: text
+    default: homeassistant
+    minLength: 1
+    maxLength: 64
