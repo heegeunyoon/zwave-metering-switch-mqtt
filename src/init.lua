@@ -13,14 +13,12 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
---
--- MQTT integration is intentionally not connected in this initial commit.
--- This keeps the known-good Z-Wave behavior isolated until transport tests pass.
 
 local capabilities = require "st.capabilities"
 local defaults = require "st.zwave.defaults"
 local ZwaveDriver = require "st.zwave.driver"
 local Meter = (require "st.zwave.CommandClass.Meter")({ version = 3 })
+local Gateway = require "mqtt.gateway"
 
 local function momentary_reset_handler(_, device)
   device:send(Meter:Reset({}))
@@ -28,7 +26,18 @@ local function momentary_reset_handler(_, device)
 end
 
 local function device_added(_, device)
-  device:refresh()
+  -- The MQTT Gateway is a LAN virtual device, not a Z-Wave endpoint.
+  if not Gateway.is_gateway(device) then
+    device:refresh()
+  end
+end
+
+local function device_init(driver, device)
+  -- Create exactly one shared LAN Gateway for all plugs managed by this driver.
+  -- The Gateway itself must not recursively request another Gateway.
+  if not Gateway.is_gateway(device) then
+    Gateway.ensure(driver)
+  end
 end
 
 local driver_template = {
@@ -40,7 +49,8 @@ local driver_template = {
     capabilities.momentary
   },
   lifecycle_handlers = {
-    added = device_added
+    added = device_added,
+    init = device_init
   },
   capability_handlers = {
     [capabilities.momentary.ID] = {
