@@ -1,7 +1,5 @@
 -- MQTT 3.1.1 packet codec (QoS 0 publish path).
--- Copyright 2026 contributors.
--- Licensed under Apache-2.0; see LICENSE.
-
+-- Copyright 2026 contributors. Licensed under Apache-2.0; see LICENSE.
 local M = {}
 
 local function u16(value)
@@ -33,7 +31,7 @@ end
 
 function M.connect(client_id, username, password, keepalive)
   keepalive = keepalive or 60
-  local flags = 0x02 -- clean session
+  local flags = 0x02
   local payload = utf8_field(client_id)
   if username ~= nil and username ~= "" then
     flags = flags + 0x80
@@ -44,8 +42,7 @@ function M.connect(client_id, username, password, keepalive)
     flags = flags + 0x40
     payload = payload .. utf8_field(password)
   end
-  local variable = utf8_field("MQTT") .. string.char(4, flags) .. u16(keepalive)
-  return packet(0x10, variable .. payload)
+  return packet(0x10, utf8_field("MQTT") .. string.char(4, flags) .. u16(keepalive) .. payload)
 end
 
 function M.publish(topic, payload, retain)
@@ -56,19 +53,32 @@ function M.subscribe(packet_id, topic)
   return packet(0x82, u16(packet_id) .. utf8_field(topic) .. string.char(0))
 end
 
-function M.pingreq()
-  return string.char(0xC0, 0x00)
-end
+function M.pingreq() return string.char(0xC0, 0x00) end
+function M.disconnect() return string.char(0xE0, 0x00) end
 
-function M.disconnect()
-  return string.char(0xE0, 0x00)
+-- Extract one complete MQTT packet from a TCP byte stream.
+-- Returns packet, bytes_consumed; returns nil when the buffer is incomplete.
+function M.take_packet(buffer)
+  if #buffer < 2 then return nil end
+  local multiplier, remaining, index = 1, 0, 2
+  while true do
+    local digit = buffer:byte(index)
+    if not digit then return nil end
+    remaining = remaining + (digit % 128) * multiplier
+    index = index + 1
+    if digit < 128 then break end
+    multiplier = multiplier * 128
+    if multiplier > 128 * 128 * 128 then return nil, nil, "invalid remaining length" end
+  end
+  local total = (index - 1) + remaining
+  if #buffer < total then return nil end
+  return buffer:sub(1, total), total
 end
 
 function M.decode_publish(data)
   assert(type(data) == "string" and #data >= 4, "incomplete MQTT packet")
   local header = data:byte(1)
   assert(math.floor(header / 16) == 3, "not an MQTT PUBLISH packet")
-
   local multiplier, remaining, index = 1, 0, 2
   while true do
     local digit = data:byte(index)
@@ -79,23 +89,15 @@ function M.decode_publish(data)
     multiplier = multiplier * 128
     assert(multiplier <= 128 * 128 * 128, "invalid remaining length")
   end
-
-  local body_start = index
-  local packet_end = body_start + remaining - 1
-  assert(#data >= packet_end, "incomplete MQTT payload")
-
+  local packet_end = index + remaining - 1
+  assert(#data == packet_end, "packet length mismatch")
   local topic_len = data:byte(index) * 256 + data:byte(index + 1)
   index = index + 2
   local topic = data:sub(index, index + topic_len - 1)
   index = index + topic_len
-
   local qos = math.floor((header % 8) / 2)
   assert(qos == 0, "only QoS 0 inbound PUBLISH is supported")
-  return {
-    topic = topic,
-    payload = data:sub(index, packet_end),
-    retain = (header % 2) == 1
-  }
+  return { topic = topic, payload = data:sub(index, packet_end), retain = (header % 2) == 1 }
 end
 
 return M
