@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-dev.9 - 2026-11-24
+
+- Replaced the outdated MQTT scaffold test plan with the complete end-to-end Hub v2 validation checklist.
+- Documented current QoS 0 / plain TCP limitations and required LAN security controls.
+- Updated README and VERSION.
+
 ## 0.1.0-dev.8 - 2026-11-24
 
 - Validated MQTT Gateway preference values, including integer port bounds and password/username pairing.
