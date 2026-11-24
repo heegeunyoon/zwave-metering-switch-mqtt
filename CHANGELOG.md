@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0-dev.3 - 2026-11-24
+
+- Added an experimental MQTT 3.1.1 TCP client using SmartThings Edge `cosock.socket`.
+- Added MQTT Home Assistant Discovery payload helpers.
+- Added an MQTT integration test plan and documented current transport limitations.
+- MQTT client is not wired into Z-Wave lifecycle/capability handlers; not ready for Hub v2 installation.
+
 ## 0.1.0-dev.2 - 2026-11-24
 
 - Added an isolated MQTT 3.1.1 packet codec for CONNECT, QoS 0 PUBLISH, SUBSCRIBE, PINGREQ, and DISCONNECT packets.
