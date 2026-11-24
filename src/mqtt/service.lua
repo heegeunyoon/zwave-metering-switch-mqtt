@@ -80,7 +80,6 @@ local function run_worker(driver, prefs, worker_generation)
       password = prefs.password, client_id = client_id,
       keepalive = 60, timeout = 8
     })
-
     local connected, err = client:connect()
     if connected then
       log.info("Connected to configured MQTT broker")
@@ -101,8 +100,7 @@ local function run_worker(driver, prefs, worker_generation)
           for _, message in ipairs(messages) do handle_message(driver, prefs, message) end
 
           local now = os.time()
-          local current_plugs = plugs(driver)
-          for _, device in ipairs(current_plugs) do
+          for _, device in ipairs(plugs(driver)) do
             if not discovered[device.id] then
               local ok, publish_err = publish_discovery(client, device, prefs)
               if not ok then
@@ -136,7 +134,6 @@ local function run_worker(driver, prefs, worker_generation)
     else
       log.warn("MQTT connection failed: " .. tostring(err))
     end
-
     client:close()
     if generation == worker_generation then
       wait(retry)
@@ -160,7 +157,13 @@ function M.start(driver, _gateway)
   driver.mqtt_signature = signature
   running = true
   cosock.spawn(function()
-    run_worker(driver, prefs, worker_generation)
+    while generation == worker_generation do
+      local ok, worker_err = pcall(run_worker, driver, prefs, worker_generation)
+      if not ok then
+        log.error("MQTT supervisor recovered from runtime error: " .. tostring(worker_err))
+        if generation == worker_generation then wait(5) end
+      end
+    end
     if generation == worker_generation then running = false end
   end, "shared-mqtt-gateway")
   log.info("Started shared MQTT Gateway worker")
