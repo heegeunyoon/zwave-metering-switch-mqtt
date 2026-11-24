@@ -20,7 +20,7 @@ A SmartThings Edge driver extension intended to bridge existing Z-Wave metering 
 5. Support Home Assistant MQTT Discovery.
 6. MQTT failures must never prevent normal Z-Wave operation.
 
-## Network assumptions for the initial deployment
+## Initial network assumptions
 
 - MQTT broker: Docker VM at `192.168.60.15`
 - MQTT port: `1883` for initial LAN-only testing
@@ -28,17 +28,18 @@ A SmartThings Edge driver extension intended to bridge existing Z-Wave metering 
 
 Do not expose unauthenticated MQTT to untrusted networks. Before production use, configure broker credentials and restrict access with firewall rules; TLS can be added where supported by the hub runtime.
 
-## Current status
+## Development status — 0.1.0-dev.2
 
-This repository begins as a derivative of the upstream `zwave-metering-switch-v1` driver. The upstream Z-Wave implementation and Apache-2.0 notices are retained.
-
-The MQTT protocol module is being developed and tested separately before it is attached to device lifecycle handlers. **Do not install this initial development version on the production hub yet.** The first milestone is an off-hub protocol test; the next is a Hub v2 LAN connectivity test with a single plug.
+- Imported upstream Z-Wave driver source and Dawon sub-driver with original attribution notices.
+- Added an isolated MQTT 3.1.1 packet codec under `src/mqtt/codec.lua`.
+- Added initial smoke tests under `tests/test_mqtt_codec.lua`.
+- MQTT is **not yet connected** to device lifecycle or capability handlers. This is deliberate: socket handling, packet framing, and Hub v2 behavior must be verified before installing this driver on the production hub.
 
 ## Upstream attribution
 
 Based on [lemonade30us/Smartthings-Edge-Driver](https://github.com/lemonade30us/Smartthings-Edge-Driver/tree/main/zwave-metering-switch-v1).
 
-The upstream source identifies the driver as `Z-Wave Metering Switch v1`, version `0.1.1`, and includes copyright notices for jido1517 and SmartThings. Those notices are retained in the derived source files. See [LICENSE](LICENSE).
+The upstream source identifies the driver as `Z-Wave Metering Switch v1`, version `0.1.1`, and includes copyright notices for jido1517 and SmartThings. Those notices are retained in the derived source files. The upstream repository includes Apache-2.0 licensing terms; see [LICENSE](LICENSE).
 
 ## Planned MQTT topics
 
