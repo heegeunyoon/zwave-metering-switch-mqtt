@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.0-dev.7 - 2026-11-24
+
+- Connected the MQTT Gateway lifecycle and shared MQTT service.
+- Added a single MQTT 3.1.1 connection supervisor with reconnect backoff and keepalive.
+- Added buffered TCP stream framing so fragmented MQTT packets are accumulated before decoding.
+- Added retained Home Assistant MQTT Discovery configuration and periodic retained switch/power/energy state publication.
+- Added MQTT ON/OFF command subscription and routing through SmartThings' capability command dispatcher.
+- Added Gateway preference-change/reconfigure handling and preserved normal Z-Wave refresh behavior for plugs.
+- Added stream-framing tests and updated the development status.
+- Hub v2 runtime and package validation remain required; this is not a production release.
+
 ## 0.1.0-dev.6 - 2026-11-24
 
 - Added shared MQTT Gateway lookup and preference parsing.
@@ -19,14 +30,14 @@
 - Added SmartThings device Preferences for MQTT broker address, port, optional username/password, state topic prefix, and Home Assistant Discovery prefix.
 - Documented that SmartThings Preferences are device-scoped and must currently be set per plug.
 - Documented that broker addresses and credentials are not stored in source code.
-- MQTT transport remains experimental and is not wired into Z-Wave lifecycle/capability handlers.
+- MQTT transport remains experimental and is not wired to Z-Wave lifecycle/capability handlers.
 
 ## 0.1.0-dev.3 - 2026-11-24
 
 - Added an experimental MQTT 3.1.1 TCP client using SmartThings Edge `cosock.socket`.
 - Added MQTT Home Assistant Discovery payload helpers.
 - Added an MQTT integration test plan and documented current transport limitations.
-- MQTT client is not wired into Z-Wave lifecycle/capability handlers; not ready for Hub v2 installation.
+- MQTT client is not wired to Z-Wave lifecycle/capability handlers; not ready for Hub v2 installation.
 
 ## 0.1.0-dev.2 - 2026-11-24
 
