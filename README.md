@@ -39,11 +39,11 @@ For each plug (device UUID sanitized for topic use):
 - The implementation currently uses MQTT 3.1.1 QoS 0 on TCP/1883. TLS and QoS 1 are not implemented.
 - Discovery is retained; state is published every five seconds. HA commands are ON/OFF text payloads.
 
-## Development status — 0.1.0-dev.9
+## Development status — 0.1.0-dev.10
 
-End-to-end code has been connected: Gateway provisioning and Preferences, one shared MQTT worker, reconnect backoff, TCP stream framing, HA Discovery, periodic state publication, and MQTT-to-SmartThings switch command injection. A GitHub Actions workflow checks Lua syntax and the MQTT codec tests.
+End-to-end code has been connected: Gateway provisioning and Preferences, one shared MQTT worker, reconnect backoff, TCP stream framing, HA Discovery, periodic state publication, and MQTT-to-SmartThings switch command injection. GitHub Actions runs Lua syntax/codec checks and builds the SmartThings Edge package with the official CLI inside an ephemeral Node container. The CLI runs in build-only mode: no SmartThings account authentication, cloud upload, or Hub installation occurs. The generated ZIP is checked and retained as a seven-day CI artifact.
 
-**Still requires validation before installation:** SmartThings CLI package/profile validation, Hub v2 Gateway creation, actual Mosquitto CONNECT/SUBSCRIBE/PUBLISH, switch command round-trip, power/energy units, and hub/broker restart behavior. This repository change is not represented as Hub-tested or production-ready.
+**Still requires validation before installation:** successful CI packaging job completion and profile semantics on Hub v2, Hub v2 Gateway creation, actual Mosquitto CONNECT/SUBSCRIBE/PUBLISH, switch command round-trip, power/energy units, and hub/broker restart behavior. This repository change is not represented as Hub-tested or production-ready.
 
 ## Upstream attribution
 
