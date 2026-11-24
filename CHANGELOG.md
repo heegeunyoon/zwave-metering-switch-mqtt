@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0-dev.8 - 2026-11-24
+
+- Validated MQTT Gateway preference values, including integer port bounds and password/username pairing.
+- Added a supervisor-level recovery guard for unexpected MQTT worker runtime errors.
+- Added GitHub Actions checks for Lua syntax and MQTT codec/stream-framing tests.
+- Hub v2 runtime and SmartThings CLI package validation remain required; not a production release.
+
 ## 0.1.0-dev.7 - 2026-11-24
 
 - Connected the MQTT Gateway lifecycle and shared MQTT service.
