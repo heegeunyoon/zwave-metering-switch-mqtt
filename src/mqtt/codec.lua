@@ -11,7 +11,7 @@ end
 
 local function utf8_field(value)
   assert(type(value) == "string", "MQTT string must be a string")
-  assert(not value:find("\\%z"), "MQTT UTF-8 strings cannot contain NUL")
+  assert(not value:find("%z"), "MQTT UTF-8 strings cannot contain NUL")
   return u16(#value) .. value
 end
 
@@ -49,13 +49,11 @@ function M.connect(client_id, username, password, keepalive)
 end
 
 function M.publish(topic, payload, retain)
-  local body = utf8_field(topic) .. (payload or "")
-  return packet(retain and 0x31 or 0x30, body)
+  return packet(retain and 0x31 or 0x30, utf8_field(topic) .. (payload or ""))
 end
 
 function M.subscribe(packet_id, topic)
-  local body = u16(packet_id) .. utf8_field(topic) .. string.char(0)
-  return packet(0x82, body)
+  return packet(0x82, u16(packet_id) .. utf8_field(topic) .. string.char(0))
 end
 
 function M.pingreq()
@@ -70,6 +68,7 @@ function M.decode_publish(data)
   assert(type(data) == "string" and #data >= 4, "incomplete MQTT packet")
   local header = data:byte(1)
   assert(math.floor(header / 16) == 3, "not an MQTT PUBLISH packet")
+
   local multiplier, remaining, index = 1, 0, 2
   while true do
     local digit = data:byte(index)
@@ -80,20 +79,23 @@ function M.decode_publish(data)
     multiplier = multiplier * 128
     assert(multiplier <= 128 * 128 * 128, "invalid remaining length")
   end
-  assert(#data >= index + remaining - 1, "incomplete MQTT payload")
+
+  local body_start = index
+  local packet_end = body_start + remaining - 1
+  assert(#data >= packet_end, "incomplete MQTT payload")
+
   local topic_len = data:byte(index) * 256 + data:byte(index + 1)
   index = index + 2
   local topic = data:sub(index, index + topic_len - 1)
   index = index + topic_len
+
   local qos = math.floor((header % 8) / 2)
   assert(qos == 0, "only QoS 0 inbound PUBLISH is supported")
   return {
     topic = topic,
-    payload = data:sub(index, index + remaining - (index - (2 + (index - 2 - topic_len))) - 1),
+    payload = data:sub(index, packet_end),
     retain = (header % 2) == 1
   }
 end
 
-M._remaining_length = remaining_length
-M._utf8_field = utf8_field
 return M
