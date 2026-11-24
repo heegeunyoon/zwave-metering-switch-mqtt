@@ -1,4 +1,5 @@
 -- Shared MQTT Gateway device lookup and provisioning.
+local log = require "log"
 local M = {}
 M.DEVICE_NETWORK_ID = "stzwave-mqtt-gateway"
 M.PROFILE = "mqtt-gateway"
@@ -26,14 +27,13 @@ function M.ensure(driver)
     model = "Shared MQTT Gateway",
     vendor_provided_label = "MQTT Gateway"
   }
-  local ok, result, err = pcall(function()
+  local ok, _, err = pcall(function()
     return driver:try_create_device(metadata)
   end)
-  if not ok or result == false or result == nil then
+  if not ok then
     driver.mqtt_gateway_creation_requested = nil
-    local reason = err or result
-    log.warn("Unable to request MQTT Gateway creation: " .. tostring(reason))
-    return nil, reason
+    log.warn("Unable to request MQTT Gateway creation: " .. tostring(_))
+    return nil, _
   end
   log.info("Requested creation of the shared MQTT Gateway LAN device")
   return true
